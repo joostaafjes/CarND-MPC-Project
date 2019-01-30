@@ -3,6 +3,44 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+## Project description
+
+The goal of the project is run a car in the simulator with a Model Predictive Controller (MPC). The simulator provides way points for the track that should be followed by sending steering and acceleration commands to the simulator.
+
+The video below shows a run with the simulator with the final model.
+
+[![PID Controller with simulator](https://img.youtube.com/vi/17aINd0bwcQ/0.jpg)](https://www.youtube.com/watch?v=17aINd0bwcQ)
+
+
+## MPC Model description
+
+The MPC model being used is the one being discussed in the previous lesson of this course and exists of the following steps:
+1. A set of waypoints is provided that should be followed
+2. The current position and orientation of the car is provided
+3. A vehicle model is provided that can predict the next state (position, orientation, speed, acceleration) of the vehicle
+4. An optimizer function will find the best actuator values(throttle and steering value) to follow this path.
+
+For the optimizer function, cost functions needs to be defined. In this model, the following costs functions have been used:
+1. Cost functions for the cte en epsi errors
+2. Cost function for the speed optimization
+3. Cost functions to minimize the use of actuators
+4. Cost function to minimize the gap between sequential steering angle (not the acceleration, it's a race car!!) 
+5. Cost function to relate the speed to the corner angle: the higher the angle, the lower the speed
+
+## Timestep length and elapsed duration
+
+The number of timesteps(N) and the delta time(dt) needs to be optimized. 
+- N has been optimized between 5 and 25
+- dt has been optimized betwen 0.05 and 0.5
+
+The optimal values that have been found: N=10 and dt=0.15
+
+## Latency
+
+To deal with the latency (100 ms) that occurs between the MPC controller and the simulator the following has been done:
+
+The initial state of the optimizer function has been predicted after 100 ms. With this, the model was able to make robust prediction.
+
 ## Dependencies
 
 * cmake >= 3.5

@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <cppad/cppad.hpp>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
@@ -20,6 +21,8 @@ using std::vector;
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
+
+const double Lf = 2.67;
 
 int main() {
   uWS::Hub h;
@@ -47,18 +50,103 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double steering_angle = j[1]["steering_angle"];
+          double throttle = j[1]["throttle"];
 
           /**
-           * TODO: Calculate steering angle and throttle using MPC.
+           * convert waypoint to car coordinate system
+           */
+          std::cout << "Before:" << std::endl;
+//          for (auto x: ptsx) {
+//            std::cout << x << " ";
+//          }
+          for (int index = 0; index << ptsy.size(); index++) {
+            std::cout << ptsy.at(index) << " ";
+          }
+//          for (auto y: ptsy) {
+//            std::cout << y << " ";
+//          }
+          for (int index = 0; index < ptsx.size(); index++) {
+            double diff_ptsx = ptsx[index] - px;
+            double diff_ptsy = ptsy[index] - py;
+            ptsx[index] = cos(psi) * diff_ptsx + sin(psi) * diff_ptsy;
+            ptsy[index] = cos(psi) * diff_ptsy - sin(psi) * diff_ptsx;
+          }
+
+          /*
+           * convert vector to Eigen Vector
+           */
+          VectorXd wptsx = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsx.data(), ptsx.size());
+          VectorXd wptsy = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsy.data(), ptsy.size());
+          std::cout << "After:" << std::endl;
+          std::cout << "x:" << wptsx << std::endl;
+          std::cout << "y:" << wptsy << std::endl;
+
+          /**
+           * Fit a polynomial to the above x and y coordinates
+           */
+          auto coeffs = polyfit(wptsx, wptsy, 3);
+          std::cout << "Coeffs:" << coeffs << std::endl;
+
+          /**
+           * Calculate steering angle and throttle using MPC.
            * Both are in between [-1, 1].
            */
-          double steer_value;
-          double throttle_value;
+
+          /**
+           * Calculate state parameters in Car coordinate system at dt
+           */
+          double dt = 0.1;
+          double py_car = 0.0;
+          double px_car = dt * v;
+          double psi_car = -v / Lf * steering_angle * dt;
+          double v_car = v + throttle * dt;
+
+          /**
+           * Calculate the cross track error
+           */
+          double cte =  polyeval(coeffs, 0) + v * CppAD::sin(-atan(coeffs[1])) * dt;
+//          double cte = polyeval(coeffs, px) - py;
+
+          /**
+           * Calculate the orientation error
+           */
+//          double epsi = psi - atan(coeffs[1]);
+          double epsi = -atan(coeffs[1]) + psi_car;
+
+          std::cout << "Before(car coordinates):" << std::endl;
+          std::cout << "x = " << px_car << std::endl;
+          std::cout << "y = " << py_car << std::endl;
+          std::cout << "psi = " << psi_car << std::endl;
+          std::cout << "v = " << v_car << std::endl;
+          std::cout << "cte = " << cte << std::endl;
+          std::cout << "epsi = " << epsi << std::endl;
+
+          VectorXd state(6);
+          state << px_car, py_car, psi_car, v_car, cte, epsi;
+          std::vector<double> result = mpc.Solve(state, coeffs);
+
+//          std::cout << "x = " << vars[0] << std::endl;
+//          std::cout << "y = " << vars[1] << std::endl;
+//          std::cout << "psi = " << vars[2] << std::endl;
+//          std::cout << "v = " << vars[3] << std::endl;
+//          std::cout << "cte = " << vars[4] << std::endl;
+//          std::cout << "epsi = " << vars[5] << std::endl;
+//          std::cout << "delta = " << vars[6] << std::endl;
+//          std::cout << "a = " << vars[7] << std::endl;
+//          std::cout << std::endl;
+
+//          double steer_value = vars[6];
+//          double throttle_value = vars[7];
+          double steer_value = result[0];
+          double throttle_value = result[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the 
           //   steering value back. Otherwise the values will be in between 
           //   [-deg2rad(25), deg2rad(25] instead of [-1, 1].
+          steer_value /= deg2rad(25);
+
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
@@ -71,6 +159,10 @@ int main() {
            *   the vehicle's coordinate system the points in the simulator are 
            *   connected by a Green line
            */
+           for (int index = 2; index < result.size(); index += 2) {
+             mpc_x_vals.push_back(result[index]);
+             mpc_y_vals.push_back(result[index + 1]);
+           }
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -85,9 +177,16 @@ int main() {
            *   connected by a Yellow line
            */
 
+          double poly_inc = 2.5;
+          int num_points = 25;
+          for ( int i = 0; i < num_points; i++ ) {
+            double x = poly_inc * i;
+            next_x_vals.push_back( x );
+            next_y_vals.push_back( polyeval(coeffs, x) );
+          }
+
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
-
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;

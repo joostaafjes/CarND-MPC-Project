@@ -59,8 +59,8 @@ class FG_eval {
      *   anything you think may be beneficial.
      */
      for (int t=0; t < N; t++) {
-       fg[0] += CppAD::pow(vars[cte_start + t], 2);
-       fg[0] += CppAD::pow(vars[epsi_start + t], 2);
+       fg[0] += 4000 * CppAD::pow(vars[cte_start + t], 2);
+       fg[0] += 600 * CppAD::pow(vars[epsi_start + t], 2);
        fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
      }
 
@@ -72,7 +72,7 @@ class FG_eval {
 
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < N - 2; ++t) {
-      fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += 500 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
@@ -117,8 +117,11 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
-      AD<double> f0 = coeffs[0] + x0 * coeffs[1];
-      AD<double> psides0 = CppAD::atan(coeffs[1]);
+//      AD<double> f0 = coeffs[0] + x0 * coeffs[1];
+//      AD<double> psides0 = CppAD::atan(coeffs[1]);
+// TODO
+      AD<double> f0 = coeffs[3]*x0*x0*x0 + coeffs[2]*x0*x0 + coeffs[1]*x0 + coeffs[0];
+      AD<double> psides0 = CppAD::atan(coeffs[1] + (2*coeffs[2]*x0) + (3*coeffs[3]*x0*x0));
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.
@@ -201,8 +204,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
   for (int i = delta_start; i < a_start; ++i) {
-    vars_lowerbound[i] = -0.436332;
-    vars_upperbound[i] = 0.436332;
+    vars_lowerbound[i] = -0.436332 * Lf;
+    vars_upperbound[i] = 0.436332 * Lf;
   }
 
   // Acceleration/decceleration upper and lower limits.

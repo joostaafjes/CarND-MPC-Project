@@ -57,15 +57,9 @@ int main() {
            * convert waypoint to car coordinate system
            */
           std::cout << "Before:" << std::endl;
-//          for (auto x: ptsx) {
-//            std::cout << x << " ";
-//          }
           for (int index = 0; index << ptsy.size(); index++) {
             std::cout << ptsy.at(index) << " ";
           }
-//          for (auto y: ptsy) {
-//            std::cout << y << " ";
-//          }
           for (int index = 0; index < ptsx.size(); index++) {
             double diff_ptsx = ptsx[index] - px;
             double diff_ptsy = ptsy[index] - py;
@@ -94,25 +88,24 @@ int main() {
            */
 
           /**
-           * Calculate state parameters in Car coordinate system at dt
+           * Determine state parameters in car coordinate system at dt
+           * and calculate state after 100ms because of latency between actuation commands
            */
-          double dt = 0.1;
+          double latency = 0.10;
           double py_car = 0.0;
-          double px_car = dt * v;
-          double psi_car = -v / Lf * steering_angle * dt;
-          double v_car = v + throttle * dt;
+          double px_car = latency * v;
+          double psi_car = -v / Lf * steering_angle * latency;
+          double v_car = v + throttle * latency;
 
           /**
            * Calculate the cross track error
            */
-          double cte =  polyeval(coeffs, 0) + v * CppAD::sin(-atan(coeffs[1])) * dt;
-//          double cte = polyeval(coeffs, px) - py;
+          double cte =  polyeval(coeffs, 0) + v * CppAD::sin(-atan(coeffs[1])) * latency;
 
           /**
            * Calculate the orientation error
            */
-//          double epsi = psi - atan(coeffs[1]);
-          double epsi = -atan(coeffs[1]) + psi_car;
+          double epsi = psi_car -atan(coeffs[1]);
 
           std::cout << "Before(car coordinates):" << std::endl;
           std::cout << "x = " << px_car << std::endl;
@@ -126,18 +119,6 @@ int main() {
           state << px_car, py_car, psi_car, v_car, cte, epsi;
           std::vector<double> result = mpc.Solve(state, coeffs);
 
-//          std::cout << "x = " << vars[0] << std::endl;
-//          std::cout << "y = " << vars[1] << std::endl;
-//          std::cout << "psi = " << vars[2] << std::endl;
-//          std::cout << "v = " << vars[3] << std::endl;
-//          std::cout << "cte = " << vars[4] << std::endl;
-//          std::cout << "epsi = " << vars[5] << std::endl;
-//          std::cout << "delta = " << vars[6] << std::endl;
-//          std::cout << "a = " << vars[7] << std::endl;
-//          std::cout << std::endl;
-
-//          double steer_value = vars[6];
-//          double throttle_value = vars[7];
           double steer_value = result[0];
           double throttle_value = result[1];
 
@@ -145,7 +126,7 @@ int main() {
           // NOTE: Remember to divide by deg2rad(25) before you send the 
           //   steering value back. Otherwise the values will be in between 
           //   [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          steer_value /= deg2rad(25);
+          steer_value = steer_value / deg2rad(25.0);
 
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
@@ -155,7 +136,7 @@ int main() {
           vector<double> mpc_y_vals;
 
           /**
-           * TODO: add (x,y) points to list here, points are in reference to 
+           * add (x,y) points to list here, points are in reference to
            *   the vehicle's coordinate system the points in the simulator are 
            *   connected by a Green line
            */
@@ -172,7 +153,7 @@ int main() {
           vector<double> next_y_vals;
 
           /**
-           * TODO: add (x,y) points to list here, points are in reference to 
+           * add (x,y) points to list here, points are in reference to
            *   the vehicle's coordinate system the points in the simulator are 
            *   connected by a Yellow line
            */

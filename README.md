@@ -44,11 +44,34 @@ For the optimizer function, cost functions needs to be defined. In this model, t
 
 ## Timestep length and elapsed duration
 
-The number of timesteps(N) and the delta time(dt) needs to be optimized. 
+T is the production horizon over which future predictions are made. T consists of:
+- N the number of timesteps
+- dt is the time between actuations
+
+General guidelines are:
+- T should be as large as possible, but not more than a few seconds because it does not make sense to predict too far in the future
+- dt should be as small as possible
+- The larger N, the more steps are involved which costs more computer power
+
+Taken this into account the following have been tried
 - N has been optimized between 5 and 25
 - dt has been optimized betwen 0.05 and 0.5
 
+For low Ns, the vehicle directly drove off the track, for higher N the vehicle never drove very stable.
+For lower dt there was not much improvement and higher dt caused too much ossilation.
+
 The optimal values that have been found: N=10 and dt=0.15
+
+## Polynomial Fitting and MPC Preprocessing
+
+The waypoints provided by the simulator are first converted to vehicle coordinates line 56-68(src/main.cpp)
+
+A third order polynomial is than calculated to fit these waypoints (see helpers.h)
+
+These polynomial is used to:
+- Calculate the CTE and orientation errors
+- In the cost optimization method to estimate the most optimal trajectory
+- Calculate the waypoint for the simulator to show them (Yellow line)
 
 ## Latency
 

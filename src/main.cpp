@@ -54,7 +54,7 @@ int main() {
           double throttle = j[1]["throttle"];
 
           /**
-           * convert waypoint to car coordinate system
+           * convert waypoints to car coordinate system
            */
           std::cout << "Before:" << std::endl;
           for (int index = 0; index << ptsy.size(); index++) {

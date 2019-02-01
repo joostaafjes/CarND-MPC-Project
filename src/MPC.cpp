@@ -52,14 +52,13 @@ class FG_eval {
     // Any additions to the cost should be added to `fg[0]`.
     fg[0] = 0;
 
-    // Reference State Cost
     /**
      * Define the cost related the reference state and
      *   anything you think may be beneficial.
      */
      for (int t=0; t < N; t++) {
        fg[0] += 4000 * CppAD::pow(vars[cte_start + t], 2);
-       fg[0] += 2000 * CppAD::pow(vars[epsi_start + t], 2);
+       fg[0] += 500 * CppAD::pow(vars[epsi_start + t], 2);
        fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
      }
 
@@ -77,7 +76,7 @@ class FG_eval {
 
     // Minimize the speed with too much steering angle
     for (int t = 0; t < N - 1; ++t) {
-      fg[0] += 400 * CppAD::pow(vars[delta_start + t] * vars[v_start + t], 2);
+      fg[0] += 1000 * CppAD::pow(vars[delta_start + t] * vars[v_start + t], 2);
     }
 
 

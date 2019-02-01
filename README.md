@@ -9,10 +9,20 @@ The goal of the project is run a car in the simulator with a Model Predictive Co
 
 The video below shows a run with the simulator with the final model.
 
-[![PID Controller with simulator](https://img.youtube.com/vi/17aINd0bwcQ/0.jpg)](https://www.youtube.com/watch?v=17aINd0bwcQ)
+[![PID Controller with simulator](https://img.youtube.com/vi/fodA8BmvYHo/0.jpg)](https://www.youtube.com/watch?v=fodA8BmvYHo)
 
 
 ## MPC Model description
+
+[image1]: ./images/state.png
+[image2]: ./images/sateupdate.png
+
+![st][image1]
+
+
+![State variables](/images/state.png)
+
+![st][image2]
 
 The MPC model being used is the one being discussed in the previous lesson of this course and exists of the following steps:
 1. A set of waypoints is provided that should be followed

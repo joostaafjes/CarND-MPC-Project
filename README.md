@@ -7,22 +7,27 @@ Self-Driving Car Engineer Nanodegree Program
 
 The goal of the project is run a car in the simulator with a Model Predictive Controller (MPC). The simulator provides way points for the track that should be followed by sending steering and acceleration commands to the simulator.
 
-The video below shows a run with the simulator with the final model.
+The video below shows a run with the simulator with the final model (click at the image to view the video -> redirect to youtube).
 
 [![PID Controller with simulator](https://img.youtube.com/vi/fodA8BmvYHo/0.jpg)](https://www.youtube.com/watch?v=fodA8BmvYHo)
 
 
 ## MPC Model description
 
-[image1]: ./images/state.png
-[image2]: ./images/sateupdate.png
-
-![st][image1]
-
+The figure below shows the state of the vehicle that is being used (screenshot from Udacity lesson):
+- x and y of the vehicle
+- psi: orientation of the vehicle
+- v: speed
 
 ![State variables](/images/state.png)
 
-![st][image2]
+Next to that the following variables are also kept in the state:
+- Cross Track Error (CTE)
+- Error of the oriention (ePsi)
+
+The figure below shows the equations that are being used in the model to calculate the next state (screenshot from Udacity lesson)
+
+![State update equations](/images/stateupdate.png)
 
 The MPC model being used is the one being discussed in the previous lesson of this course and exists of the following steps:
 1. A set of waypoints is provided that should be followed
